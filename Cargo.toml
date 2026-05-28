@@ -1,15 +1,31 @@
 [package]
 name = "main-loop-async"
 version = "0.1.0"
-description = ""
-keywords = []
-repository = ""
-documentation = ""                    # Point to https://docs.rs/CRATE-NAME
-categories = []
 authors = ["One <one.bgz1@gmail.com>"]
-readme = "README.md"
-license = "MIT OR Apache-2.0"
+categories = [
+  "asynchronous",
+  "game-development",
+  "gui",
+  "wasm",
+  "web-programming",
+]
+documentation = "https://docs.rs/main-loop-async"
 edition = "2024"
+keywords = [
+  "async",
+  "game",
+  "gamedev",
+  "sync",
+  "utility",
+  "ui",
+  "loop",
+  "wasm",
+  "webassembly",
+]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/c-git/main-loop-async"
+description = "Makes running async code from a main loop (ui loop, game loop) more ergonomic"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
