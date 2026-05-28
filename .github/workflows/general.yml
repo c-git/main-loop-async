@@ -25,9 +25,8 @@ jobs:
     steps:
       - uses: wykies/checkout@main
       - uses: wykies/setup-rust-toolchain@main
-      # Uncomment if working on an egui project
-      # - name: Install egui dependencies
-      #   run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+      - name: Run examples
+        run: cargo test --all-features --examples
       - name: Run tests
         run: cargo test --all-features
 

@@ -29,4 +29,59 @@ description = "Makes running async code from a main loop (ui loop, game loop) mo
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
+anyhow = "1.0.99"
+document-features = "0.2.11"
+egui = { version = "0.34", default-features = false, optional = true } # The minimal part of their API we use has been stable
+futures = "0.3.31"
+rand = "0.10.0"
+thiserror = "2.0.14"
+tracing = "0.1.41"
+web-time = "1.1.0"
+
+# For native compilation
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.47.1", default-features = false, optional = true }
+
+# For compiling to wasm:
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+js-sys = { version = "0.3.77", optional = true }
+wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.50"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+tokio = { version = "1.47.1", default-features = false, features = ["macros", "rt-multi-thread"] }
+
+[[example]]
+name = "loop_yield_custom"
+required-features = ["yield_now"]
+
+[[example]]
+name = "loop_yield_data_state"
+required-features = ["yield_now"]
+
+[features]
+## Enables the tokio runtime and reqwest's default features.
+## If default-features gets disabled do ensure you at least enable tls, unless you explicitly do not want tls support.
+default = ["native-tokio"]
+
+## Sets [tokio][tokio-url] as the runtime to use for native
+native-tokio = ["dep:tokio"]
+
+## Add a function that can be called to yield to the executor.
+## This is only needed if you only have one thread and need to release it to prevent a deadlock
+## because you are waiting on another future (as can be the case in WASM). If you are using a
+## framework such as egui this may not be necessary as they already allow for other futures to
+## make progress. But one test will quickly let you know either way. If the program freezes
+## after you make a request then this can help.
+yield_now = ["dep:js-sys", "dep:web-sys"]
+
+## Add helper functions to ['DataState'] to do egui boiler plate
+egui = ["dep:egui"]

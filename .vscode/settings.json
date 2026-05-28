@@ -1,6 +1,9 @@
 {
   "cSpell.words": [
-    "gamedev",
-    "webassembly"
-  ]
+    "alpn",
+    "getrandom",
+    "jsvalue"
+  ],
+  // "rust-analyzer.cargo.target": "wasm32-unknown-unknown" // Uncomment to use rust-analyzer on wasm code instead
+  "rust-analyzer.cargo.features": ["yield_now", "egui"]
 }
