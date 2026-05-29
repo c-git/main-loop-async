@@ -1,6 +1,6 @@
 use tracing::warn;
 
-use crate::{data_state::CanMakeProgress, Awaiting, DataState, ErrorBounds};
+use crate::{Awaiting, DataState, ErrorBounds, data_state::CanMakeProgress};
 use std::fmt::Debug;
 use std::ops::Range;
 
@@ -141,7 +141,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
                 let wait_time_in_millis = rand::rng().random_range(self.retry_delay_millis.clone());
                 self.next_allowed_attempt = millis_since_epoch() + wait_time_in_millis as u128;
 
-                self.inner.start_request(fetch_fn)
+                self.inner.start_task(fetch_fn)
             }
             DataState::AwaitingResponse(_) => {
                 if self.inner.poll().is_present() {

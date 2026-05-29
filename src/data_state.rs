@@ -70,23 +70,23 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
     {
-        let result = self.start_request(fetch_fn);
+        let result = self.start_task(fetch_fn);
         if result.is_able_to_make_progress() {
             ui.spinner();
         }
         result
     }
 
-    /// Starts a new request. Only intended to be on [Self::None] and if state
+    /// Starts a new task. Only intended to be on [Self::None] and if state
     /// is any other value it returns [CanMakeProgress::UnableToMakeProgress]
     #[must_use]
-    pub fn start_request<F, R>(&mut self, fetch_fn: F) -> CanMakeProgress
+    pub fn start_task<F, R>(&mut self, f: F) -> CanMakeProgress
     where
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
     {
         if self.is_none() {
-            *self = DataState::AwaitingResponse(fetch_fn().into());
+            *self = DataState::AwaitingResponse(f().into());
             CanMakeProgress::AbleToMakeProgress
         } else {
             debug_assert!(

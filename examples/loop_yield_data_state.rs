@@ -2,8 +2,7 @@
 // the same. This example demonstrates how this crate can be used with the
 // DataState type.
 
-use anyhow::Context;
-use main_loop_async::{DataState, oneshot, spawn_with_return};
+use main_loop_async::{DataState, spawn_with_return};
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "native-tokio"))]
 #[tokio::main]
@@ -21,8 +20,8 @@ fn main() {
     }
 }
 
-async fn doubled(input: i32) -> String {
-    (input * 2).to_string()
+async fn doubled(input: i32) -> Result<String, &'static str> {
+    Ok((input * 2).to_string())
 }
 
 async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,36 +33,18 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
     // GUI.
     loop {
         if state.is_none() {
-            let can_make_progress =
-                state.start_request(|| make_request(client, "https://httpbin.org/get"));
+            let can_make_progress = state.start_task(|| spawn_with_return(|| doubled(10)));
             assert!(can_make_progress.is_able_to_make_progress());
         }
-        if let Some(status_code) = state.poll().present() {
+        if let Some(task_result) = state.poll().present() {
             println!("Response received");
-            assert_eq!(status_code, &200);
+            assert_eq!(task_result, "20");
             break;
         }
-        reqwest_cross::yield_now().await;
+        main_loop_async::yield_now().await;
     }
     println!("Exited loop");
     Ok(())
-}
-
-fn make_request(
-    client: reqwest::Client,
-    url: impl reqwest::IntoUrl,
-) -> oneshot::Receiver<anyhow::Result<reqwest::StatusCode>> {
-    let req = client.get(url);
-    let response_handler = |resp: reqwest::Result<reqwest::Response>| async {
-        resp.map(|resp| resp.status())
-            .context("Request failed, got an error back")
-    };
-    let ui_notify = || {
-        println!("Request Completed, this is where you would wake up your UI thread.
-If using egui version of the functions the associated methods add spinners which will keep the loop going so no wake up is needed.
-Passing an empty closure would suffice.");
-    };
-    fetch_plus(req, response_handler, ui_notify)
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

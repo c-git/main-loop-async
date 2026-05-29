@@ -22,6 +22,11 @@ fn main() {
     }
 }
 
+async fn doubled(input: i32) -> String {
+    println!("Task run");
+    (input * 2).to_string()
+}
+
 enum State {
     Startup,
     AwaitingResponse(futures::channel::oneshot::Receiver<String>),
@@ -29,7 +34,6 @@ enum State {
 }
 
 async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
     let mut state = State::Startup;
 
     println!("Starting loop");
@@ -40,30 +44,22 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
         match state {
             State::Startup => {
                 // Send request
-                let request = client.get("https://httpbin.org/get");
-                let (tx, rx) = futures::channel::oneshot::channel();
-                fetch(
-                    request,
-                    move |result: Result<reqwest::Response, reqwest::Error>| async {
-                        tx.send(result.expect("Expecting Response not Error").status())
-                            .expect("Receiver should still be available");
-                    },
-                );
-                println!("Request sent");
+                let rx = spawn_with_return(|| doubled(5));
+                println!("Task spawned");
                 state = State::AwaitingResponse(rx);
             }
             State::AwaitingResponse(mut rx) => {
                 // Check if response is ready
                 match rx.try_recv() {
                     Ok(option) => {
-                        if let Some(status) = option {
+                        if let Some(task_result) = option {
                             println!("Response received");
-                            assert_eq!(status, 200);
+                            assert_eq!(task_result, "10");
                             state = State::Done;
                         } else {
                             // Still waiting
                             state = State::AwaitingResponse(rx);
-                            reqwest_cross::yield_now().await;
+                            main_loop_async::yield_now().await;
                         }
                     }
                     Err(e) => {
