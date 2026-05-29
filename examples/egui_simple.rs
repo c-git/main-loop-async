@@ -8,20 +8,35 @@
 //! cargo run --example egui_simple --features="egui"
 //! ```
 
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
 use std::sync::{
     Arc,
     atomic::{AtomicU8, Ordering},
 };
 
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
 use main_loop_async::{DataState, DataStateRetry, spawn_with_return};
 
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
 fn main() -> eframe::Result {
     use eframe::egui;
 
     // Setup Tokio Runtime on a separate thread
-    let rt = create_tokio_runtime();
+    let rt = Helper::create_tokio_runtime();
     let _enter = rt.enter(); // This Guard must be held to call `tokio::spawn` anywhere in the program
-    start_background_worker(rt); // This is also needed to prevent the runtime from stopping
+    Helper::start_background_worker(rt); // This is also needed to prevent the runtime from stopping
 
     // Our application state:
     let mut name = "Arthur".to_owned();
@@ -53,7 +68,7 @@ fn main() -> eframe::Result {
 
                 // Data from the spawned task will show here after the user clicks
                 ui.separator();
-                ui_show_data(
+                Helper::ui_show_data(
                     ui,
                     &mut data_state,
                     &mut seconds_required_to_load,
@@ -63,7 +78,7 @@ fn main() -> eframe::Result {
                 // Alternate version to show data with automatic retry and automatically starts
                 // trying to load
                 ui.separator();
-                ui_show_data_retry(
+                Helper::ui_show_data_retry(
                     ui,
                     &mut data_state_retry,
                     seconds_required_to_load,
@@ -74,115 +89,139 @@ fn main() -> eframe::Result {
     )
 }
 
-fn ui_show_data(
-    ui: &mut egui::Ui,
-    data_state: &mut DataState<String>,
-    seconds_required_to_load: &mut u64,
-    atomic_load_count: &Arc<AtomicU8>,
-) {
-    ui.heading(format!(
-        "Load Data Without Retry (NB: Load randomly fails, {} attempts so far)",
-        atomic_load_count.load(Ordering::Relaxed)
-    ));
-    if let Some(data) = data_state.egui_poll_mut(ui, None) {
-        ui.horizontal(|ui| {
-            ui.label("Editable Data from spawned task");
-            ui.text_edit_singleline(data);
-        });
-        if ui.button("Clear Data").clicked() {
-            *data_state = DataState::None;
+/// To group function to avoid too many `cfg` calls with duplicate values
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
+struct Helper;
+
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
+impl Helper {
+    fn ui_show_data(
+        ui: &mut egui::Ui,
+        data_state: &mut DataState<String>,
+        seconds_required_to_load: &mut u64,
+        atomic_load_count: &Arc<AtomicU8>,
+    ) {
+        ui.heading(format!(
+            "Load Data Without Retry (NB: Load randomly fails, {} attempts so far)",
+            atomic_load_count.load(Ordering::Relaxed)
+        ));
+        if let Some(data) = data_state.egui_poll_mut(ui, None) {
+            ui.horizontal(|ui| {
+                ui.label("Editable Data from spawned task");
+                ui.text_edit_singleline(data);
+            });
+            if ui.button("Clear Data").clicked() {
+                *data_state = DataState::None;
+            }
+        } else if data_state.is_none() {
+            ui.add(
+                egui::Slider::new(seconds_required_to_load, 0..=30)
+                    .text("Seconds needed to load data"),
+            );
+            if ui.button("Spawn task to load data").clicked() {
+                let secs = *seconds_required_to_load;
+                let atomic_load_count = Arc::clone(atomic_load_count);
+                let can_make_progress = data_state.egui_start_task(ui, || {
+                    spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
+                });
+                assert!(
+                    can_make_progress.is_able_to_make_progress(),
+                    "checks that we don't have a logic error, this should always be able to make progress from this point"
+                );
+            }
+        } else if data_state.is_awaiting_response() {
+            // Currently loading allowing the user to abort, might not make sense for your
+            // application
+            if ui.button("Cancel Loading").clicked() {
+                *data_state = DataState::None;
+            }
         }
-    } else if data_state.is_none() {
-        ui.add(
-            egui::Slider::new(seconds_required_to_load, 0..=30).text("Seconds needed to load data"),
-        );
-        if ui.button("Spawn task to load data").clicked() {
-            let secs = *seconds_required_to_load;
+    }
+
+    fn ui_show_data_retry(
+        ui: &mut egui::Ui,
+        data_state: &mut DataStateRetry<String>,
+        secs: u64,
+        atomic_load_count: &Arc<AtomicU8>,
+    ) {
+        ui.heading(format!(
+            "Load Data With Retry (NB: Load randomly fails, {} attempts so far)",
+            atomic_load_count.load(Ordering::Relaxed)
+        ));
+        if let Some(data) = data_state.present_mut() {
+            ui.horizontal(|ui| {
+                ui.label("Editable Data from spawned task");
+                ui.text_edit_singleline(data);
+            });
+            if ui.button("Clear Data").clicked() {
+                data_state.clear();
+            }
+        } else {
             let atomic_load_count = Arc::clone(atomic_load_count);
-            let can_make_progress = data_state.egui_start_task(ui, || {
-                spawn_with_return(move || load_data(secs, atomic_load_count))
+            let can_make_progress = data_state.egui_start_or_poll(ui, None, || {
+                spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
             });
             assert!(
                 can_make_progress.is_able_to_make_progress(),
                 "checks that we don't have a logic error, this should always be able to make progress from this point"
             );
         }
-    } else if data_state.is_awaiting_response() {
-        // Currently loading allowing the user to abort, might not make sense for your
-        // application
-        if ui.button("Cancel Loading").clicked() {
-            *data_state = DataState::None;
-        }
-    }
-}
-
-fn ui_show_data_retry(
-    ui: &mut egui::Ui,
-    data_state: &mut DataStateRetry<String>,
-    secs: u64,
-    atomic_load_count: &Arc<AtomicU8>,
-) {
-    ui.heading(format!(
-        "Load Data With Retry (NB: Load randomly fails, {} attempts so far)",
-        atomic_load_count.load(Ordering::Relaxed)
-    ));
-    if let Some(data) = data_state.present_mut() {
-        ui.horizontal(|ui| {
-            ui.label("Editable Data from spawned task");
-            ui.text_edit_singleline(data);
-        });
-        if ui.button("Clear Data").clicked() {
-            data_state.clear();
-        }
-    } else {
-        let atomic_load_count = Arc::clone(atomic_load_count);
-        let can_make_progress = data_state.egui_start_or_poll(ui, None, || {
-            spawn_with_return(move || load_data(secs, atomic_load_count))
-        });
-        assert!(
-            can_make_progress.is_able_to_make_progress(),
-            "checks that we don't have a logic error, this should always be able to make progress from this point"
-        );
-    }
-    if data_state.is_awaiting_response() {
-        // Currently loading allowing the user to abort, might not make sense for your
-        // application
-        if ui.button("Cancel Loading").clicked() {
-            data_state.clear();
-        }
-    }
-}
-
-fn create_tokio_runtime() -> tokio::runtime::Runtime {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .expect("Unable to create Runtime")
-}
-
-fn start_background_worker(rt: tokio::runtime::Runtime) {
-    // Execute the runtime in its own thread.
-    std::thread::spawn(move || {
-        rt.block_on(async {
-            loop {
-                tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+        if data_state.is_awaiting_response() {
+            // Currently loading allowing the user to abort, might not make sense for your
+            // application
+            if ui.button("Cancel Loading").clicked() {
+                data_state.clear();
             }
-        })
-    });
-}
-
-async fn load_data(secs: u64, atomic_load_count: Arc<AtomicU8>) -> anyhow::Result<String> {
-    atomic_load_count.fetch_add(1, Ordering::Relaxed);
-    if should_fail() {
-        anyhow::bail!("there was a random problem loading the data, try again");
+        }
     }
 
-    tokio::time::sleep_until(tokio::time::Instant::now() + std::time::Duration::from_secs(secs))
+    fn create_tokio_runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("Unable to create Runtime")
+    }
+
+    fn start_background_worker(rt: tokio::runtime::Runtime) {
+        // Execute the runtime in its own thread.
+        std::thread::spawn(move || {
+            rt.block_on(async {
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+                }
+            })
+        });
+    }
+
+    async fn load_data(secs: u64, atomic_load_count: Arc<AtomicU8>) -> anyhow::Result<String> {
+        atomic_load_count.fetch_add(1, Ordering::Relaxed);
+        if Helper::should_fail() {
+            anyhow::bail!("there was a random problem loading the data, try again");
+        }
+
+        tokio::time::sleep_until(
+            tokio::time::Instant::now() + std::time::Duration::from_secs(secs),
+        )
         .await;
 
-    Ok(format!("loaded the data after {secs} seconds"))
-}
+        Ok(format!("loaded the data after {secs} seconds"))
+    }
 
-fn should_fail() -> bool {
-    rand::random()
+    fn should_fail() -> bool {
+        rand::random()
+    }
 }
+#[cfg(not(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+)))]
+fn main() {}
