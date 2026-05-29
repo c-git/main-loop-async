@@ -84,8 +84,9 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
     {
-        // Register a request to repaint after 1 second to update the UI
-        ui.request_repaint_after(std::time::Duration::from_secs(1));
+        // Register a request to repaint after to update the UI (10 FPS
+        // doesn't look so bad while minimizing uncessary work)
+        ui.request_repaint_after(std::time::Duration::from_millis(100));
 
         match self.inner.as_ref() {
             DataState::None | DataState::AwaitingResponse(_) => {
