@@ -44,7 +44,7 @@ web-time = "1.1.0"
 
 # For native compilation
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.47.1", default-features = false, optional = true }
+tokio = { version = "1.47.1", default-features = false, features = ["rt"], optional = true }
 
 # For compiling to wasm:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
