@@ -19,16 +19,23 @@ fn main() {
     }
 }
 
-async fn some_task(value: i32) -> i32 {
+#[expect(
+    clippy::unused_async,
+    reason = "for demonstration purposes of the test"
+)]
+async fn double(value: i32) -> i32 {
     value * 2
 }
 
 async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
-    let rx = spawn_with_return(|| some_task(5));
+    let rx = spawn_with_return(|| double(5));
 
     // Note the next call block this execution path (task / thread) see loop
     // examples for alternatives
     let task_result = rx.await?;
-    assert_eq!(task_result, 10);
+    assert_eq!(
+        task_result, 10,
+        "5 sent in and it should be doubled to be 10"
+    );
     Ok(())
 }

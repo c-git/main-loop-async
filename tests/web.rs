@@ -8,7 +8,7 @@ fn main() {
         let rx = main_loop_async::spawn_with_return(async || 200);
 
         let task_result = rx.await?; //If we can't block the calling task use try_recv instead
-        assert_eq!(task_result, 200);
+        assert_eq!(task_result, 200, "we expect the value we sent in");
         Ok(())
     }
 }

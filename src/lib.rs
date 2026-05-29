@@ -13,7 +13,7 @@
 //! idea what level of abstraction would work for you is by looking at the
 //! [examples][#examples]. I would say if you're writing a larger application
 //! then [DataState] can abstract away a lot of the boiler plate. If automated
-//! retires are desired see [DataStateRetry] which exposes similar methods but
+//! retires are desired see [`DataStateRetry`] which exposes similar methods but
 //! with retry built in.
 //!
 //! NOTE: At least 1 [feature flag](#feature-flags) for

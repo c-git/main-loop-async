@@ -11,7 +11,7 @@ pub trait ErrorBounds: Display + Send + Sync + 'static + Debug {}
 impl<T: Display + Send + Sync + 'static + Debug> ErrorBounds for T {}
 
 #[derive(Error, Debug)]
-/// Represents the types of errors that can occur while using [DataState]
+/// Represents the types of errors that can occur while using [`DataState`]
 pub enum DataStateError<E: ErrorBounds> {
     /// Sender was dropped, request cancelled
     #[error("Request sender was dropped")]
@@ -77,8 +77,8 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         result
     }
 
-    /// Starts a new task. Only intended to be on [Self::None] and if state
-    /// is any other value it returns [CanMakeProgress::UnableToMakeProgress]
+    /// Starts a new task. Only intended to be on [`Self::None`] and if state
+    /// is any other value it returns [`CanMakeProgress::UnableToMakeProgress`]
     #[must_use]
     pub fn start_task<F, R>(&mut self, f: F) -> CanMakeProgress
     where
@@ -86,7 +86,7 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         R: Into<Awaiting<T, E>>,
     {
         if self.is_none() {
-            *self = DataState::AwaitingResponse(f().into());
+            *self = Self::AwaitingResponse(f().into());
             CanMakeProgress::AbleToMakeProgress
         } else {
             debug_assert!(
@@ -98,10 +98,10 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     }
 
     /// Convenience method that will try to make progress if in
-    /// [Self::AwaitingResponse] and does nothing otherwise. Returns a reference
+    /// [`Self::AwaitingResponse`] and does nothing otherwise. Returns a reference
     /// to self for chaining
     pub fn poll(&mut self) -> &mut Self {
-        if let DataState::AwaitingResponse(rx) = self
+        if let Self::AwaitingResponse(rx) = self
             && let Some(new_state) = Self::await_data(rx)
         {
             *self = new_state;
@@ -155,10 +155,10 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         Some(match rx.0.try_recv() {
             Ok(recv_opt) => match recv_opt {
                 Some(outcome_result) => match outcome_result {
-                    Ok(data) => DataState::Present(data),
+                    Ok(data) => Self::Present(data),
                     Err(err_msg) => {
                         warn!(?err_msg, "Error response received instead of the data");
-                        DataState::Failed(DataStateError::ErrorResponse(err_msg))
+                        Self::Failed(DataStateError::ErrorResponse(err_msg))
                     }
                 },
                 None => {
@@ -167,7 +167,7 @@ impl<T, E: ErrorBounds> DataState<T, E> {
             },
             Err(e) => {
                 error!("Error receiving on channel. Sender dropped.");
-                DataState::Failed(DataStateError::SenderDropped(e))
+                Self::Failed(DataStateError::SenderDropped(e))
             }
         })
     }
@@ -214,14 +214,14 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     }
 }
 
-impl<T, E: ErrorBounds> AsRef<DataState<T, E>> for DataState<T, E> {
-    fn as_ref(&self) -> &DataState<T, E> {
+impl<T, E: ErrorBounds> AsRef<Self> for DataState<T, E> {
+    fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<T, E: ErrorBounds> AsMut<DataState<T, E>> for DataState<T, E> {
-    fn as_mut(&mut self) -> &mut DataState<T, E> {
+impl<T, E: ErrorBounds> AsMut<Self> for DataState<T, E> {
+    fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
@@ -234,7 +234,7 @@ impl<E: ErrorBounds> From<E> for DataStateError<E> {
 
 impl From<&str> for DataStateError<anyhow::Error> {
     fn from(value: &str) -> Self {
-        value.to_string().into()
+        value.to_owned().into()
     }
 }
 

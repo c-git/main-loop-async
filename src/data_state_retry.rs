@@ -20,7 +20,7 @@ pub struct DataStateRetry<T, E: ErrorBounds = anyhow::Error> {
 }
 
 impl<T, E: ErrorBounds> DataStateRetry<T, E> {
-    /// Creates a new instance of [DataStateRetry]
+    /// Creates a new instance of [`DataStateRetry`]
     pub fn new(max_attempts: u8, retry_delay_millis: Range<u16>) -> Self {
         Self {
             max_attempts,
@@ -213,14 +213,14 @@ impl<T, E: ErrorBounds> Default for DataStateRetry<T, E> {
     }
 }
 
-impl<T, E: ErrorBounds> AsRef<DataStateRetry<T, E>> for DataStateRetry<T, E> {
-    fn as_ref(&self) -> &DataStateRetry<T, E> {
+impl<T, E: ErrorBounds> AsRef<Self> for DataStateRetry<T, E> {
+    fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<T, E: ErrorBounds> AsMut<DataStateRetry<T, E>> for DataStateRetry<T, E> {
-    fn as_mut(&mut self) -> &mut DataStateRetry<T, E> {
+impl<T, E: ErrorBounds> AsMut<Self> for DataStateRetry<T, E> {
+    fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
