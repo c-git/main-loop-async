@@ -62,6 +62,8 @@ mod yield_;
 
 pub use data_state::{Awaiting, CanMakeProgress, DataState, DataStateError, ErrorBounds};
 pub use data_state_retry::DataStateRetry;
+#[cfg(not(target_arch = "wasm32"))]
+pub use platform::spawn_thread_with_return;
 pub use platform::{spawn, spawn_with_return};
 pub use traits::{Spawnable, SpawnableNoReturn, SpawnableWithReturn};
 #[cfg(feature = "yield_now")]
