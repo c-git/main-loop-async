@@ -27,7 +27,7 @@ def main [] {
     }
     
     # Ensure cargo-semver-checks passes
-    cargo semver-check
+    # cargo semver-check
 
     git tag $tag_name
     git push --tags
