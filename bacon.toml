@@ -4,13 +4,13 @@ command = ["cargo", "check", "--all-targets", "--features=yield_now,egui"]
 [jobs.all-features-clippy-all]
 command = ["cargo", "clippy", "--all-targets", "--features=yield_now,egui"]
 
-[jobs.test_examples]
+[jobs.test-examples]
 command = ["cargo", "test", "--features=yield_now,egui", "--examples"]
 
 [jobs.wasm]
 command = ["cargo", "check", "--target", "wasm32-unknown-unknown"]
 
 [keybindings]
-e = "job:test_examples"
+e = "job:test-examples"
 c = "job:all-features-clippy-all"
 a = "job:all-features-check-all"
