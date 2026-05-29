@@ -1,12 +1,13 @@
-# rust-crate-template
-Intended to be used as a starter for a crate
+# main-loop-async
+
+Aims to provide an ergonomic way to spawn task from a main loop (like a UI loop or game loop) without blocking the loop. See examples for how to use.
 
 ## License
 
 All code in this repository is dual-licensed under either:
 
-- Apache License, Version 2.0
-- MIT license
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.
 This means you can select the license you prefer!
