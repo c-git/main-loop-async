@@ -27,8 +27,8 @@ pub fn spawn<F: crate::SpawnableNoReturn>(future: F) {
 /// # #[cfg(all(not(target_arch = "wasm32"),feature = "native-tokio"))]
 /// # #[tokio::main(flavor = "current_thread")]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///  let task = async || { "hi".to_owned() };
-///  let rx = spawn_with_return(task);
+///  let task = || { "hi".to_owned() };
+///  let rx = spawn_thread_with_return(task);
 ///
 ///  let result = rx.await?; //Only an example, in a real use case use try_recv instead
 ///  assert_eq!(result, "hi");
