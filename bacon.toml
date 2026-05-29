@@ -10,7 +10,11 @@ command = ["cargo", "test", "--features=yield_now,egui", "--examples"]
 [jobs.wasm]
 command = ["cargo", "check", "--target", "wasm32-unknown-unknown"]
 
+[jobs.egui-simple]
+command = ["cargo", "run", "--example", "egui_simple", "--features=egui"]
+
 [keybindings]
 e = "job:test-examples"
 c = "job:all-features-clippy-all"
 a = "job:all-features-check-all"
+alt-e = "job:egui-simple"
