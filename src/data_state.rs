@@ -98,8 +98,8 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     }
 
     /// Convenience method that will try to make progress if in
-    /// [`Self::AwaitingResponse`] and does nothing otherwise. Returns a reference
-    /// to self for chaining
+    /// [`Self::AwaitingResponse`] and does nothing otherwise. Returns a
+    /// reference to self for chaining
     pub fn poll(&mut self) -> &mut Self {
         if let Self::AwaitingResponse(rx) = self
             && let Some(new_state) = Self::await_data(rx)
@@ -211,6 +211,14 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     #[must_use]
     pub fn is_none(&self) -> bool {
         matches!(self, Self::None)
+    }
+
+    /// Returns `true` if the data state is [`AwaitingResponse`].
+    ///
+    /// [`AwaitingResponse`]: DataState::AwaitingResponse
+    #[must_use]
+    pub fn is_awaiting_response(&self) -> bool {
+        matches!(self, Self::AwaitingResponse(..))
     }
 }
 

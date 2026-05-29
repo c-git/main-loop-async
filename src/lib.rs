@@ -46,7 +46,8 @@
 //! # How to run tokio on "secondary" thread
 //!
 //! If you want to use the main thread for your UI and need to run
-//! [tokio][tokio-url] on a "secondary" thread I found this
+//! [tokio][tokio-url] on a "secondary" thread see the [egui
+//! example][examples_folder]. I also found this
 //! [example](https://github.com/parasyte/egui-tokio-example) helpful. I found it in this
 //! [discussion](https://github.com/emilk/egui/discussions/521), which had other suggested
 //! examples as well.

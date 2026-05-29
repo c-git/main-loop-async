@@ -33,7 +33,7 @@ description = "Makes running async code from a main loop (ui loop, game loop) mo
 all-features = true
 
 [dependencies]
-anyhow = "1.0.99"
+anyhow = "1.0.99" # TODO 1 make optional only enabled with egui
 document-features = "0.2.11"
 egui = { version = "0.34", default-features = false, optional = true } # The minimal part of their API we use has been stable
 futures = "0.3.31"
@@ -57,8 +57,8 @@ web-sys = { version = "0.3.77", optional = true, default-features = false, featu
 wasm-bindgen-test = "0.3.50"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-tokio = { version = "1.47.1", default-features = false, features = ["macros", "rt-multi-thread"] }
 eframe = "0.34" # For Example
+tokio = { version = "1.47.1", default-features = false, features = ["macros", "rt-multi-thread", "time"] }
 
 [[example]]
 name = "loop_yield_custom"
