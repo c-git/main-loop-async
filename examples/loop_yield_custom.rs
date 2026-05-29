@@ -3,7 +3,7 @@
 // Native and WASM require different main functions but after that it should be
 // the same. Uses yield but yield isn't available yet for wasm_bindgen_futures
 // so uses a workaround found. If you're building a bigger application or have
-// multiple places you need to make requests look at the
+// multiple places you need to spawn tasks look at the
 // loop_yield_data_state.rs example instead.
 
 use main_loop_async::spawn_with_return;
@@ -49,7 +49,7 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         match state {
             State::Startup => {
-                // Send request
+                // Start task
                 let rx = spawn_with_return(|| doubled(5));
                 println!("Task spawned");
                 state = State::AwaitingResponse(rx);

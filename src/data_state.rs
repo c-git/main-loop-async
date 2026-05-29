@@ -13,11 +13,11 @@ impl<T: Display + Send + Sync + 'static + Debug> ErrorBounds for T {}
 #[derive(Error, Debug)]
 /// Represents the types of errors that can occur while using [`DataState`]
 pub enum DataStateError<E: ErrorBounds> {
-    /// Sender was dropped, request cancelled
-    #[error("Request sender was dropped")]
+    /// Sender was dropped, task cancelled
+    #[error("Task sender was dropped")]
     SenderDropped(oneshot::Canceled),
 
-    /// The response received from the request was an error
+    /// The response received from the task was an error
     #[error("Response received was an error: {0}")]
     ErrorResponse(E),
 
@@ -64,13 +64,13 @@ pub enum DataState<T, E: ErrorBounds = anyhow::Error> {
 
 impl<T, E: ErrorBounds> DataState<T, E> {
     #[cfg(feature = "egui")]
-    /// Calls [`Self::start_request`] and adds a spinner if progress can be made
-    pub fn egui_start_request<F, R>(&mut self, ui: &mut egui::Ui, fetch_fn: F) -> CanMakeProgress
+    /// Calls [`Self::start_task`] and adds a spinner if progress can be made
+    pub fn egui_start_task<F, R>(&mut self, ui: &mut egui::Ui, f: F) -> CanMakeProgress
     where
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
     {
-        let result = self.start_task(fetch_fn);
+        let result = self.start_task(f);
         if result.is_able_to_make_progress() {
             ui.spinner();
         }

@@ -78,7 +78,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
         &mut self,
         ui: &mut egui::Ui,
         retry_msg: Option<&str>,
-        fetch_fn: F,
+        f: F,
     ) -> CanMakeProgress
     where
         F: FnOnce() -> R,
@@ -87,7 +87,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
         match self.inner.as_ref() {
             DataState::None | DataState::AwaitingResponse(_) => {
                 self.ui_spinner_with_attempt_count(ui);
-                self.start_or_poll(fetch_fn)
+                self.start_or_poll(f)
             }
             DataState::Present(_data) => {
                 // Does nothing as data is already present
@@ -99,7 +99,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
                         ui.visuals().error_fg_color,
                         format!("No attempts left from {}. {e}", self.max_attempts),
                     );
-                    if ui.button(retry_msg.unwrap_or("Restart Requests")).clicked() {
+                    if ui.button(retry_msg.unwrap_or("Restart Task")).clicked() {
                         self.reset_attempts();
                         self.inner = DataState::default();
                     }
@@ -113,7 +113,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
                             wait_left / 1000
                         ),
                     );
-                    let can_make_progress = self.start_or_poll(fetch_fn);
+                    let can_make_progress = self.start_or_poll(f);
                     debug_assert!(
                         can_make_progress.is_able_to_make_progress(),
                         "This should be able to make progress"
@@ -129,7 +129,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
 
     /// Attempts to load the data and returns if it is able to make progress.
     #[must_use]
-    pub fn start_or_poll<F, R>(&mut self, fetch_fn: F) -> CanMakeProgress
+    pub fn start_or_poll<F, R>(&mut self, f: F) -> CanMakeProgress
     where
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
@@ -141,7 +141,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
                 let wait_time_in_millis = rand::rng().random_range(self.retry_delay_millis.clone());
                 self.next_allowed_attempt = millis_since_epoch() + wait_time_in_millis as u128;
 
-                self.inner.start_task(fetch_fn)
+                self.inner.start_task(f)
             }
             DataState::AwaitingResponse(_) => {
                 if self.inner.poll().is_present() {
@@ -157,7 +157,7 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
                 } else {
                     let wait_left = wait_before_next_attempt(self.next_allowed_attempt);
                     if wait_left == 0 {
-                        warn!(?err_msg, ?self.attempts_left, "retrying request");
+                        warn!(?err_msg, ?self.attempts_left, "retrying task");
                         self.attempts_left -= 1;
                         self.inner = DataState::None;
                     }

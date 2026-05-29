@@ -57,7 +57,7 @@ fn main() -> eframe::Result {
                     );
                     if ui.button("Spawn task to load data").clicked() {
                         let can_make_progress =
-                            data_state.egui_start_request(ui, || main_loop_async::spawn_with_return(move || load_data(seconds_required_to_load)));
+                            data_state.egui_start_task(ui, || main_loop_async::spawn_with_return(move || load_data(seconds_required_to_load)));
                             assert!(
                                 can_make_progress.is_able_to_make_progress(),
                                 "checks that we don't have a logic error, this should always be able to make progress from this point"

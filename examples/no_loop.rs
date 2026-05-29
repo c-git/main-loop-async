@@ -1,5 +1,5 @@
 // Native and WASM require different main functions but after that it should be
-// the same. This example shows how to do a simple fetch.
+// the same. This example shows how to spawn a simple task.
 
 use main_loop_async::spawn_with_return;
 

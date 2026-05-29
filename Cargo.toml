@@ -85,7 +85,7 @@ native-tokio = ["dep:tokio"]
 ## because you are waiting on another future (as can be the case in WASM). If you are using a
 ## framework such as egui this may not be necessary as they already allow for other futures to
 ## make progress. But one test will quickly let you know either way. If the program freezes
-## after you make a request then this can help.
+## after you spawn a task then this can help.
 yield_now = ["dep:js-sys", "dep:web-sys"]
 
 ## Add helper functions to ['DataState'] to do egui boiler plate
