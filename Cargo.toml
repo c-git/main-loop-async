@@ -58,6 +58,7 @@ wasm-bindgen-test = "0.3.50"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 eframe = "0.34" # For Example
+# eframe = { version = "0.34", default-features = false, features = ["glow", "x11", "default_fonts"] } # For if wgpu is giving an error
 tokio = { version = "1.47.1", default-features = false, features = ["macros", "rt-multi-thread", "time"] }
 
 [[example]]
