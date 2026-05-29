@@ -11,17 +11,7 @@ categories = [
 ]
 documentation = "https://docs.rs/main-loop-async"
 edition = "2024"
-keywords = [
-  "async",
-  "game",
-  "gamedev",
-  "sync",
-  "utility",
-  "ui",
-  "loop",
-  "wasm",
-  "webassembly",
-]
+keywords = ["async", "game", "loop", "ui", "utility"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/c-git/main-loop-async"
