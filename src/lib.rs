@@ -67,7 +67,7 @@ mod yield_;
 pub use data_state::{Awaiting, CanMakeProgress, DataState, DataStateError, ErrorBounds};
 pub use data_state_retry::DataStateRetry;
 pub use platform::{spawn, spawn_with_return};
-pub use traits::{Spawnable, SpawnableWithReturn};
+pub use traits::{Spawnable, SpawnableNoReturn, SpawnableWithReturn};
 #[cfg(feature = "yield_now")]
 pub use yield_::yield_now;
 

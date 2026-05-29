@@ -4,8 +4,7 @@
 use tracing::error;
 
 #[cfg(feature = "native-tokio")]
-use crate::Spawnable;
-use crate::SpawnableWithReturn;
+use crate::{Spawnable, SpawnableNoReturn, SpawnableWithReturn};
 
 #[cfg(not(feature = "native-tokio"))]
 compile_error!(
@@ -37,9 +36,9 @@ compile_error!(
 /// # #[cfg(target_arch = "wasm32")]
 /// # fn main(){}
 /// ```
-pub fn spawn_with_return<F: SpawnableWithReturn<O>, O: Spawnable>(
+pub fn spawn_with_return<F: SpawnableWithReturn<Out>, Out: Spawnable>(
     f: F,
-) -> futures::channel::oneshot::Receiver<<O as Future>::Output> {
+) -> futures::channel::oneshot::Receiver<<Out as Future>::Output> {
     let (tx, rx) = futures::channel::oneshot::channel();
     spawn(async move {
         let result = f().await;
@@ -54,6 +53,6 @@ pub fn spawn_with_return<F: SpawnableWithReturn<O>, O: Spawnable>(
 /// Spawns a future on the underlying runtime in a cross platform way (NB: the
 /// Send bound is removed in WASM)
 #[cfg(feature = "native-tokio")]
-pub fn spawn<F: Spawnable>(future: F) {
+pub fn spawn<F: SpawnableNoReturn>(future: F) {
     tokio::spawn(future);
 }
