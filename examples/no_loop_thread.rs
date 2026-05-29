@@ -1,6 +1,7 @@
 //! This example shows how to use `main_loop_async::spawn_thread_with_return`
 //! which only works on native
 
+#[cfg(not(target_arch = "wasm32"))]
 fn double(value: i32) -> i32 {
     value * 2
 }

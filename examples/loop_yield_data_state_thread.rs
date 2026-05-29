@@ -3,6 +3,7 @@
 // This example demonstrates how this crate can be used with the
 // DataState type without async (Native only)
 
+#[cfg(not(target_arch = "wasm32"))]
 fn doubled(input: i32) -> String {
     (input * 2).to_string()
 }
