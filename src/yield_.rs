@@ -1,6 +1,7 @@
 /// Attempts to provide a yield for executor currently in use.
-/// There doesn't appear to be one available as yet for wasm_bindgen_futures so
-/// a workaround taken from
+///
+/// There doesn't appear to be one available as yet for `wasm_bindgen_futures`
+/// so a workaround taken from
 /// <https://github.com/rustwasm/wasm-bindgen/discussions/3476> is used
 pub async fn yield_now() {
     #[cfg(target_arch = "wasm32")]

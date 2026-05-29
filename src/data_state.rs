@@ -64,7 +64,7 @@ pub enum DataState<T, E: ErrorBounds = anyhow::Error> {
 
 impl<T, E: ErrorBounds> DataState<T, E> {
     #[cfg(feature = "egui")]
-    /// Calls [Self::start_request] and adds a spinner if progress can be made
+    /// Calls [`Self::start_request`] and adds a spinner if progress can be made
     pub fn egui_start_request<F, R>(&mut self, ui: &mut egui::Ui, fetch_fn: F) -> CanMakeProgress
     where
         F: FnOnce() -> R,
@@ -113,7 +113,7 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     /// Meant to be a simple method to just provide the data if it's ready or
     /// help with UI and polling to get it ready if it's not.
     ///
-    /// WARNING: Does nothing if `self` is [Self::None]
+    /// WARNING: Does nothing if `self` is [`Self::None`]
     ///
     /// If a `error_btn_text` is provided then it overrides the default
     pub fn egui_poll_mut(
@@ -122,21 +122,21 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         error_btn_text: Option<&str>,
     ) -> Option<&mut T> {
         match self {
-            DataState::None => {}
-            DataState::AwaitingResponse(_) => {
+            Self::None => {}
+            Self::AwaitingResponse(_) => {
                 ui.spinner();
                 self.poll();
             }
-            DataState::Present(data) => {
+            Self::Present(data) => {
                 return Some(data);
             }
-            DataState::Failed(e) => {
+            Self::Failed(e) => {
                 ui.colored_label(ui.visuals().error_fg_color, e.to_string());
                 if ui
                     .button(error_btn_text.unwrap_or("Clear Error Status"))
                     .clicked()
                 {
-                    *self = DataState::default();
+                    *self = Self::default();
                 }
             }
         }
@@ -144,7 +144,7 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     }
 
     #[cfg(feature = "egui")]
-    /// Wraps [Self::egui_poll_mut] and returns an immutable reference
+    /// Wraps [`Self::egui_poll_mut`] and returns an immutable reference
     pub fn egui_poll(&mut self, ui: &mut egui::Ui, error_btn_text: Option<&str>) -> Option<&T> {
         self.egui_poll_mut(ui, error_btn_text).map(|x| &*x)
     }
