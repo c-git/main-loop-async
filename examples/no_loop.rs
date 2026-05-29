@@ -39,3 +39,13 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
     );
     Ok(())
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+
+mod tests {
+
+    #[tokio::test]
+    async fn test_name() {
+        super::common_code().await.unwrap();
+    }
+}
