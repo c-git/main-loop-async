@@ -33,7 +33,7 @@ description = "Makes running async code from a main loop (ui loop, game loop) mo
 all-features = true
 
 [dependencies]
-anyhow = "1.0.99" # TODO 1 make optional only enabled with egui
+anyhow = "1.0.99"
 document-features = "0.2.11"
 egui = { version = "0.34", default-features = false, optional = true } # The minimal part of their API we use has been stable
 futures = "0.3.31"
