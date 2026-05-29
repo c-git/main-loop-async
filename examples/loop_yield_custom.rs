@@ -19,7 +19,7 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[cfg(target_arch = "wasm32")]
 fn main() {
     #[wasm_bindgen_test::wasm_bindgen_test]
-    async fn do_fetch() -> Result<(), Box<dyn std::error::Error>> {
+    async fn run_example() -> Result<(), Box<dyn std::error::Error>> {
         common_code().await
     }
 }
