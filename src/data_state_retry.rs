@@ -84,6 +84,9 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
         F: FnOnce() -> R,
         R: Into<Awaiting<T, E>>,
     {
+        // Register a request to repaint after 1 second to update the UI
+        ui.request_repaint_after(std::time::Duration::from_secs(1));
+
         match self.inner.as_ref() {
             DataState::None | DataState::AwaitingResponse(_) => {
                 self.ui_spinner_with_attempt_count(ui);
@@ -183,6 +186,13 @@ impl<T, E: ErrorBounds> DataStateRetry<T, E> {
     #[must_use]
     pub fn is_present(&self) -> bool {
         self.inner.is_present()
+    }
+
+    /// Returns `true` if the internal data state is
+    /// [`DataState::AwaitingResponse`].
+    #[must_use]
+    pub fn is_awaiting_response(&self) -> bool {
+        self.inner.is_awaiting_response()
     }
 
     /// Returns `true` if the internal data state is [`DataState::None`].

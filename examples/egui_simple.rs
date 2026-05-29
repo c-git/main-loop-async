@@ -8,7 +8,12 @@
 //! cargo run --example egui_simple --features="egui"
 //! ```
 
-use main_loop_async::{DataState, spawn_with_return};
+use std::sync::{
+    Arc,
+    atomic::{AtomicU8, Ordering},
+};
+
+use main_loop_async::{DataState, DataStateRetry, spawn_with_return};
 
 fn main() -> eframe::Result {
     use eframe::egui;
@@ -22,7 +27,12 @@ fn main() -> eframe::Result {
     let mut name = "Arthur".to_owned();
     let mut age = 42;
     let mut data_state = DataState::None;
+    // This is more intended for use with things that load automatically, if you do
+    // not intend to use it this way you will need a separate variable to track if
+    // it should be attempting to load
+    let mut data_state_retry = DataStateRetry::new(3, 5000..10_000);
     let mut seconds_required_to_load = 10;
+    let atomic_load_count = Arc::new(AtomicU8::new(0));
 
     eframe::run_ui_native(
         "egui Example",
@@ -43,7 +53,22 @@ fn main() -> eframe::Result {
 
                 // Data from the spawned task will show here after the user clicks
                 ui.separator();
-                ui_show_data(ui, &mut data_state, &mut seconds_required_to_load);
+                ui_show_data(
+                    ui,
+                    &mut data_state,
+                    &mut seconds_required_to_load,
+                    &atomic_load_count,
+                );
+
+                // Alternate version to show data with automatic retry and automatically starts
+                // trying to load
+                ui.separator();
+                ui_show_data_retry(
+                    ui,
+                    &mut data_state_retry,
+                    seconds_required_to_load,
+                    &atomic_load_count,
+                );
             });
         },
     )
@@ -53,8 +78,12 @@ fn ui_show_data(
     ui: &mut egui::Ui,
     data_state: &mut DataState<String>,
     seconds_required_to_load: &mut u64,
+    atomic_load_count: &Arc<AtomicU8>,
 ) {
-    ui.heading("Load Data (NB: Set to randomly fail)");
+    ui.heading(format!(
+        "Load Data Without Retry (NB: Load randomly fails, {} attempts so far)",
+        atomic_load_count.load(Ordering::Relaxed)
+    ));
     if let Some(data) = data_state.egui_poll_mut(ui, None) {
         ui.horizontal(|ui| {
             ui.label("Editable Data from spawned task");
@@ -69,8 +98,10 @@ fn ui_show_data(
         );
         if ui.button("Spawn task to load data").clicked() {
             let secs = *seconds_required_to_load;
-            let can_make_progress =
-                data_state.egui_start_task(ui, || spawn_with_return(move || load_data(secs)));
+            let atomic_load_count = Arc::clone(atomic_load_count);
+            let can_make_progress = data_state.egui_start_task(ui, || {
+                spawn_with_return(move || load_data(secs, atomic_load_count))
+            });
             assert!(
                 can_make_progress.is_able_to_make_progress(),
                 "checks that we don't have a logic error, this should always be able to make progress from this point"
@@ -81,6 +112,43 @@ fn ui_show_data(
         // application
         if ui.button("Cancel Loading").clicked() {
             *data_state = DataState::None;
+        }
+    }
+}
+
+fn ui_show_data_retry(
+    ui: &mut egui::Ui,
+    data_state: &mut DataStateRetry<String>,
+    secs: u64,
+    atomic_load_count: &Arc<AtomicU8>,
+) {
+    ui.heading(format!(
+        "Load Data With Retry (NB: Load randomly fails, {} attempts so far)",
+        atomic_load_count.load(Ordering::Relaxed)
+    ));
+    if let Some(data) = data_state.present_mut() {
+        ui.horizontal(|ui| {
+            ui.label("Editable Data from spawned task");
+            ui.text_edit_singleline(data);
+        });
+        if ui.button("Clear Data").clicked() {
+            data_state.clear();
+        }
+    } else {
+        let atomic_load_count = Arc::clone(atomic_load_count);
+        let can_make_progress = data_state.egui_start_or_poll(ui, None, || {
+            spawn_with_return(move || load_data(secs, atomic_load_count))
+        });
+        assert!(
+            can_make_progress.is_able_to_make_progress(),
+            "checks that we don't have a logic error, this should always be able to make progress from this point"
+        );
+    }
+    if data_state.is_awaiting_response() {
+        // Currently loading allowing the user to abort, might not make sense for your
+        // application
+        if ui.button("Cancel Loading").clicked() {
+            data_state.clear();
         }
     }
 }
@@ -103,7 +171,8 @@ fn start_background_worker(rt: tokio::runtime::Runtime) {
     });
 }
 
-async fn load_data(secs: u64) -> anyhow::Result<String> {
+async fn load_data(secs: u64, atomic_load_count: Arc<AtomicU8>) -> anyhow::Result<String> {
+    atomic_load_count.fetch_add(1, Ordering::Relaxed);
     if should_fail() {
         anyhow::bail!("there was a random problem loading the data, try again");
     }
