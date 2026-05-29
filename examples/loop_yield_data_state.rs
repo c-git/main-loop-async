@@ -1,3 +1,5 @@
+#![expect(clippy::print_stdout)]
+
 // Native and WASM require different main functions but after that it should be
 // the same. This example demonstrates how this crate can be used with the
 // DataState type.
@@ -20,6 +22,10 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::unused_async,
+    reason = "for demonstration purposes of the example"
+)]
 async fn doubled(input: i32) -> Result<String, &'static str> {
     Ok((input * 2).to_string())
 }
@@ -34,11 +40,14 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         if state.is_none() {
             let can_make_progress = state.start_task(|| spawn_with_return(|| doubled(10)));
-            assert!(can_make_progress.is_able_to_make_progress());
+            assert!(
+                can_make_progress.is_able_to_make_progress(),
+                "checks that we don't have a logic error, this should always be able to make progress from this point"
+            );
         }
         if let Some(task_result) = state.poll().present() {
             println!("Response received");
-            assert_eq!(task_result, "20");
+            assert_eq!(task_result, "20", "response should be 10 * 2 as a String");
             break;
         }
         main_loop_async::yield_now().await;

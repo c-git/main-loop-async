@@ -21,7 +21,7 @@ fn main() {
 
 #[expect(
     clippy::unused_async,
-    reason = "for demonstration purposes of the test"
+    reason = "for demonstration purposes of the example"
 )]
 async fn double(value: i32) -> i32 {
     value * 2

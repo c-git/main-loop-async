@@ -1,3 +1,5 @@
+#![expect(clippy::print_stdout, clippy::print_stderr)]
+
 // Native and WASM require different main functions but after that it should be
 // the same. Uses yield but yield isn't available yet for wasm_bindgen_futures
 // so uses a workaround found. If you're building a bigger application or have
@@ -22,6 +24,10 @@ fn main() {
     }
 }
 
+#[expect(
+    clippy::unused_async,
+    reason = "for demonstration purposes of the example"
+)]
 async fn doubled(input: i32) -> String {
     println!("Task run");
     (input * 2).to_string()
@@ -54,7 +60,7 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
                     Ok(option) => {
                         if let Some(task_result) = option {
                             println!("Response received");
-                            assert_eq!(task_result, "10");
+                            assert_eq!(task_result, "10", "response should be 5 * 2 as a String");
                             state = State::Done;
                         } else {
                             // Still waiting
