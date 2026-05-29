@@ -11,7 +11,8 @@
 //! `reqwest-cross` and aims to make it ergonomic  to spawn async (or blocking
 //! sync tasks on native) and do not want to block in the calling task/thread,
 //! for example in main loop in a UI task/thread or game loop. This is achieved
-//! by using callbacks. This crate provides a few options to choose from and the
+//! by using callbacks (Note: Unable to spawn tasks on WASM that directly return
+//! a value). This crate provides a few options to choose from and the
 //! one that fits best for you depends on what you need. A good way to get an
 //! idea what level of abstraction would work for you is by looking at the
 //! [examples][#examples]. I would say if you're writing a larger application
