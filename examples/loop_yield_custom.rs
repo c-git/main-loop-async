@@ -4,7 +4,7 @@
 // multiple places you need to make requests look at the
 // loop_yield_data_state.rs example instead.
 
-use reqwest_cross::{fetch, reqwest};
+use main_loop_async::spawn_with_return;
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "native-tokio"))]
 #[tokio::main]
@@ -24,7 +24,7 @@ fn main() {
 
 enum State {
     Startup,
-    AwaitingResponse(futures::channel::oneshot::Receiver<reqwest::StatusCode>),
+    AwaitingResponse(futures::channel::oneshot::Receiver<String>),
     Done,
 }
 

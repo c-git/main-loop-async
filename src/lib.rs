@@ -81,13 +81,10 @@ mod yield_;
 
 pub use data_state::{Awaiting, CanMakeProgress, DataState, DataStateError, ErrorBounds};
 pub use data_state_retry::DataStateRetry;
-pub use platform::{fetch, fetch_plus, spawn};
-pub use traits::{BoundedFuture, DoneHandler, ResponseHandler, UiCallBack, ValidReturn};
+pub use platform::{spawn, spawn_with_return};
+pub use traits::{Spawnable, SpawnableWithReturn};
 #[cfg(feature = "yield_now")]
 pub use yield_::yield_now;
 
 // Exported to ensure version used matches
 pub use futures::channel::oneshot;
-
-// TODO 4: Add browser test to ensure we don't break WASM by accident. Even if
-//          it can compile it might not be browser safe

@@ -3,7 +3,7 @@
 // DataState type.
 
 use anyhow::Context;
-use reqwest_cross::{fetch_plus, oneshot, reqwest, DataState};
+use main_loop_async::{DataState, oneshot, spawn_with_return};
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "native-tokio"))]
 #[tokio::main]
@@ -21,8 +21,11 @@ fn main() {
     }
 }
 
+async fn doubled(input: i32) -> String {
+    (input * 2).to_string()
+}
+
 async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
     let mut state = DataState::None;
 
     println!("Starting loop");
@@ -31,7 +34,6 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
     // GUI.
     loop {
         if state.is_none() {
-            let client = client.clone();
             let can_make_progress =
                 state.start_request(|| make_request(client, "https://httpbin.org/get"));
             assert!(can_make_progress.is_able_to_make_progress());

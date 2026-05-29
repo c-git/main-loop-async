@@ -1,64 +1,59 @@
 //! Stores the code specific to native compilations
 // but the comments are for both because these are the ones that show on docs.rs
 
-use crate::{BoundedFuture, DoneHandler};
+use tracing::error;
+
+#[cfg(feature = "native-tokio")]
+use crate::Spawnable;
+use crate::SpawnableWithReturn;
 
 #[cfg(not(feature = "native-tokio"))]
-compile_error!("Must chose a native runtime by enabling a feature flag. Right now only tokio is supported. If you have a different runtime that you want please create an issue on github.");
+compile_error!(
+    "Must chose a native runtime by enabling a feature flag. Right now only tokio is supported. If you have a different runtime that you want please create an issue on github."
+);
 
-/// Performs a HTTP requests and calls the given callback when done with the
-/// result of the request. This is a more flexible API but requires more
-/// boilerplate, see [fetch_plus][crate::fetch_plus] which wraps a lot more of
-/// the boilerplate especially if you need a "wake_up" function.  NB: Needs to
-/// use a callback to prevent blocking on the thread that initiates the fetch.
-/// Note: Instead of calling get like in the example you can use post, put, etc.
-/// (See [reqwest::Client]). Also see the examples
-/// [folder](https://github.com/c-git/reqwest-cross/tree/main/examples)
+/// Spawns a async job to run `f` (the future passed) and returns a
+/// [`futures::channel::oneshot::Receiver`] which can be used to get the return
+/// value from `f`.
+///
+/// See the examples [folder](https://github.com/c-git/reqwest-cross/tree/main/examples)
 /// for more complete examples.
 ///
 /// # Example
 /// ```rust
-/// # use reqwest_cross::fetch;
+/// # use main_loop_async::spawn_with_return;
 ///
 /// # #[cfg(all(not(target_arch = "wasm32"),feature = "native-tokio"))]
 /// # #[tokio::main(flavor = "current_thread")]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///  let client = reqwest::Client::new();
-///  let request = client.get("https://httpbin.org/get");
-///  let (tx, rx) = futures::channel::oneshot::channel();
+///  let task = async || { "hi".to_owned() };
+///  let rx = spawn_with_return(task);
 ///
-///  fetch(request, move |result: Result<reqwest::Response, reqwest::Error>| async {
-///      tx.send(result.expect("Expecting Response not Error").status())
-///                .expect("Receiver should still be available");
-///  });
-///
-///  let status = rx.await?; //In actual use case code to prevent blocking use try_recv instead
-///  assert_eq!(status, 200);
+///  let result = rx.await?; //Only an example, in a real use case use try_recv instead
+///  assert_eq!(result, "hi");
 /// # Ok(())
 /// # }
 ///
 /// # #[cfg(target_arch = "wasm32")]
 /// # fn main(){}
 /// ```
-pub fn fetch<F, O>(request: reqwest::RequestBuilder, on_done: F)
-where
-    F: DoneHandler<O>,
-    O: BoundedFuture<()>,
-{
-    let future = async move {
-        let result = request.send().await;
-        on_done(result).await;
-    };
-    spawn(future);
+pub fn spawn_with_return<F: SpawnableWithReturn<O>, O: Spawnable>(
+    f: F,
+) -> futures::channel::oneshot::Receiver<<O as Future>::Output> {
+    let (tx, rx) = futures::channel::oneshot::channel();
+    spawn(async move {
+        let result = f().await;
+        let result = tx.send(result);
+        if let Err(err_msg) = result {
+            error!("failed to send result from `spawn_with_return`: {err_msg:?}");
+        }
+    });
+    rx
 }
 
 /// Spawns a future on the underlying runtime in a cross platform way (NB: the
 /// Send bound is removed in WASM)
 #[cfg(feature = "native-tokio")]
-pub fn spawn<F>(future: F)
-where
-    F: 'static + Send + futures::Future,
-    F::Output: Send + 'static,
-{
+pub fn spawn<F: Spawnable>(future: F) {
     tokio::spawn(future);
 }
