@@ -7,6 +7,9 @@
 //! ```rust
 //! cargo run --example egui_simple --features="egui"
 //! ```
+//!
+//! This example showcases multiple use ways to use this library. See the impl
+//! for the [`Examples`] struct for docs on each.
 
 #[cfg(all(
     not(target_arch = "wasm32"),
@@ -68,7 +71,7 @@ fn main() -> eframe::Result {
 
                 // Data from the spawned task will show here after the user clicks
                 ui.separator();
-                Helper::ui_show_data(
+                Examples::example_load_keep(
                     ui,
                     &mut data_state,
                     &mut seconds_required_to_load,
@@ -78,7 +81,7 @@ fn main() -> eframe::Result {
                 // Alternate version to show data with automatic retry and automatically starts
                 // trying to load
                 ui.separator();
-                Helper::ui_show_data_retry(
+                Examples::example_retry(
                     ui,
                     &mut data_state_retry,
                     seconds_required_to_load,
@@ -89,21 +92,22 @@ fn main() -> eframe::Result {
     )
 }
 
-/// To group function to avoid too many `cfg` calls with duplicate values
 #[cfg(all(
     not(target_arch = "wasm32"),
     feature = "native-tokio",
     feature = "egui"
 ))]
-struct Helper;
-
+struct Examples;
 #[cfg(all(
     not(target_arch = "wasm32"),
     feature = "native-tokio",
     feature = "egui"
 ))]
-impl Helper {
-    fn ui_show_data(
+impl Examples {
+    /// Example that shows loading some data that stays within the [`DataState`]
+    /// Example use case:
+    /// - The user initiates the load and the data to use at that location
+    fn example_load_keep(
         ui: &mut egui::Ui,
         data_state: &mut DataState<String>,
         seconds_required_to_load: &mut u64,
@@ -130,7 +134,7 @@ impl Helper {
                 let secs = *seconds_required_to_load;
                 let atomic_load_count = Arc::clone(atomic_load_count);
                 let can_make_progress = data_state.egui_start_task(ui, || {
-                    spawn_with_return(move || Self::load_data(secs, atomic_load_count))
+                    spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
                 });
                 assert!(
                     can_make_progress.is_able_to_make_progress(),
@@ -146,7 +150,13 @@ impl Helper {
         }
     }
 
-    fn ui_show_data_retry(
+    /// Example that shows loading some data that stays within the [`DataState`]
+    /// with automatic retry added.
+    ///
+    /// # Example use cases
+    ///
+    /// - The data auto loaded and not initiated by the user
+    fn example_retry(
         ui: &mut egui::Ui,
         data_state: &mut DataStateRetry<String>,
         secs: u64,
@@ -167,7 +177,7 @@ impl Helper {
         } else {
             let atomic_load_count = Arc::clone(atomic_load_count);
             let can_make_progress = data_state.egui_start_or_poll(ui, None, || {
-                spawn_with_return(move || Self::load_data(secs, atomic_load_count))
+                spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
             });
             assert!(
                 can_make_progress.is_able_to_make_progress(),
@@ -182,7 +192,21 @@ impl Helper {
             }
         }
     }
+}
 
+/// To group function to avoid too many `cfg` calls with duplicate values
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
+struct Helper;
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    feature = "native-tokio",
+    feature = "egui"
+))]
+impl Helper {
     fn create_tokio_runtime() -> tokio::runtime::Runtime {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
@@ -219,6 +243,7 @@ impl Helper {
         rand::random()
     }
 }
+
 #[cfg(not(all(
     not(target_arch = "wasm32"),
     feature = "native-tokio",
