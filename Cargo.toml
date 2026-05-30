@@ -1,6 +1,6 @@
 [package]
 name = "main-loop-async"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["One <one.bgz1@gmail.com>"]
 categories = [
   "asynchronous",
