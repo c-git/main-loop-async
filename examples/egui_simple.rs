@@ -220,7 +220,6 @@ mod eg_mod {
                         .text("Seconds needed to load data"),
                 );
                 ui.horizontal(|ui|{
-                    
                     if ui.button("Spawn task to load data").clicked() {
                         let secs = *seconds_required_to_load;
                         let atomic_load_count = Arc::clone(atomic_load_count);
@@ -281,8 +280,8 @@ mod eg_mod {
         fn should_fail() -> bool {
             rand::random()
         }
-        
-        fn controls_separation(ui: &mut egui::Ui)  {            
+
+        fn controls_separation(ui: &mut egui::Ui) {
             ui.add_space(40.0);
             ui.separator();
         }
