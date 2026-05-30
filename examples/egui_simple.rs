@@ -46,8 +46,9 @@ mod eg_mod {
         // not intend to use it this way you will need a separate variable to track if
         // it should be attempting to load
         let mut data_state_retry = DataStateRetry::new(3, 5000..10_000);
-        let mut seconds_required_to_load = 10;
+        let mut seconds_required_to_load = 5;
         let atomic_load_count = Arc::new(AtomicU8::new(0));
+        let mut name_loader = DataState::None;
 
         eframe::run_ui_native(
             "egui Example",
@@ -67,7 +68,7 @@ mod eg_mod {
                     ui.label(format!("Hello '{name}', age {age}"));
 
                     // Data from the spawned task will show here after the user clicks
-                    ui.separator();
+                    Helper::controls_separation(ui);
                     Examples::example_load_keep(
                         ui,
                         &mut data_state,
@@ -77,13 +78,25 @@ mod eg_mod {
 
                     // Alternate version to show data with automatic retry and automatically starts
                     // trying to load
-                    ui.separator();
+                    Helper::controls_separation(ui);
                     Examples::example_retry(
                         ui,
                         &mut data_state_retry,
                         seconds_required_to_load,
                         &atomic_load_count,
                     );
+
+                    // Note this version has the poll where we can set the other variable
+                    Helper::controls_separation(ui);
+                    Examples::example_load_and_take(
+                        ui,
+                        &mut name_loader,
+                        &mut seconds_required_to_load,
+                        &atomic_load_count,
+                    );
+                    if let Some(new_name) = name_loader.egui_poll_take(ui, None) {
+                        name = new_name;
+                    }
                 });
             },
         )
@@ -181,6 +194,54 @@ mod eg_mod {
                 }
             }
         }
+
+        /// Example that shows loading some data that is meant to be passed on
+        /// and used somewhere else
+        ///
+        /// # Example use cases
+        ///
+        /// - You already have an application and want to just move the loading
+        ///   part off the main thread
+        /// - You need to pass an owned value off to another API and you don't
+        ///   need it after it's been loaded
+        fn example_load_and_take(
+            ui: &mut egui::Ui,
+            data_state: &mut DataState<String>,
+            seconds_required_to_load: &mut u64,
+            atomic_load_count: &Arc<AtomicU8>,
+        ) {
+            ui.heading(format!(
+                "Load value for Name (NB: Load randomly fails, {} attempts so far)",
+                atomic_load_count.load(Ordering::Relaxed)
+            ));
+            if data_state.is_none() {
+                ui.add(
+                    egui::Slider::new(seconds_required_to_load, 0..=30)
+                        .text("Seconds needed to load data"),
+                );
+                ui.horizontal(|ui|{
+                    
+                    if ui.button("Spawn task to load data").clicked() {
+                        let secs = *seconds_required_to_load;
+                        let atomic_load_count = Arc::clone(atomic_load_count);
+                        let can_make_progress = data_state.egui_start_task(ui, || {
+                            spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
+                        });
+                        assert!(
+                            can_make_progress.is_able_to_make_progress(),
+                            "checks that we don't have a logic error, this should always be able to make progress from this point"
+                        );
+                    }
+                    ui.label("NB: See name for output of load");
+                });
+            } else if data_state.is_awaiting_response() {
+                // Currently loading allowing the user to abort, might not make sense for your
+                // application
+                if ui.button("Cancel Loading").clicked() {
+                    *data_state = DataState::None;
+                }
+            }
+        }
     }
 
     struct Helper;
@@ -219,6 +280,11 @@ mod eg_mod {
 
         fn should_fail() -> bool {
             rand::random()
+        }
+        
+        fn controls_separation(ui: &mut egui::Ui)  {            
+            ui.add_space(40.0);
+            ui.separator();
         }
     }
 }
