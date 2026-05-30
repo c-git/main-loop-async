@@ -70,7 +70,10 @@ pub enum DataState<T, E: ErrorBounds = anyhow::Error> {
 
 impl<T, E: ErrorBounds> DataState<T, E> {
     #[cfg(feature = "egui")]
-    /// Calls [`Self::start_task`] and adds a spinner if progress can be made
+    /// Calls [`Self::start_task`] and adds a spinner if progress can be made.
+    /// if state may not be [`Self::None`] you can chain after
+    /// [`Self::set_none`] to ensure `self` is [`Self::None`] before calling as
+    /// `self` should be [`Self::None`] before calling
     pub fn egui_start_task<F, R>(&mut self, ui: &mut egui::Ui, f: F) -> CanMakeProgress
     where
         F: FnOnce() -> R,
@@ -85,6 +88,8 @@ impl<T, E: ErrorBounds> DataState<T, E> {
 
     /// Starts a new task. Only intended to be on [`Self::None`] and if state
     /// is any other value it returns [`CanMakeProgress::UnableToMakeProgress`]
+    /// if state may not be [`Self::None`] you can chain after
+    /// [`Self::set_none`] to ensure `self` is [`Self::None`] before calling
     #[must_use]
     pub fn start_task<F, R>(&mut self, f: F) -> CanMakeProgress
     where
@@ -101,6 +106,12 @@ impl<T, E: ErrorBounds> DataState<T, E> {
             );
             CanMakeProgress::UnableToMakeProgress
         }
+    }
+
+    /// Resets `self` to [`Self::None`] and returns `&mut self` for chaining
+    pub fn set_none(&mut self) -> &mut Self {
+        *self = Self::None;
+        self
     }
 
     /// Convenience method that will try to make progress if in
