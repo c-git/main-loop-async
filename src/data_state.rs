@@ -115,6 +115,28 @@ impl<T, E: ErrorBounds> DataState<T, E> {
         self
     }
 
+    /// Will poll and if in [`Self::Present`] takes the value out and returns
+    /// the owned value, leaving `self` reset to [`Self::None`].
+    pub fn poll_take(&mut self) -> Option<T> {
+        self.poll();
+        if self.is_present() {
+            // This is safe and there is no race condition because we have mutable access
+            let mut result = Self::None;
+            std::mem::swap(self, &mut result);
+            let non_present_state = match result {
+                Self::Present(inner) => return Some(inner),
+                Self::None => "None",
+                Self::AwaitingResponse(_) => "Awaiting",
+                Self::Failed(_) => "Error",
+            };
+            unreachable!(
+                "we checked that self.is_present() was true then we tried to extract the value but got: {non_present_state:?} State"
+            )
+        } else {
+            None
+        }
+    }
+
     #[cfg(feature = "egui")]
     /// Meant to be a simple method to just provide the data if it's ready or
     /// help with UI and polling to get it ready if it's not.
@@ -153,6 +175,16 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     /// Wraps [`Self::egui_poll_mut`] and returns an immutable reference
     pub fn egui_poll(&mut self, ui: &mut egui::Ui, error_btn_text: Option<&str>) -> Option<&T> {
         self.egui_poll_mut(ui, error_btn_text).map(|x| &*x)
+    }
+
+    #[cfg(feature = "egui")]
+    /// Wraps [`Self::egui_poll_mut`] for the UI but instead returns the output
+    /// from [`Self::poll_take`] which will reset `self` to [`Self::None`] and
+    /// return the owned value if present
+    #[must_use]
+    pub fn egui_poll_take(&mut self, ui: &mut egui::Ui, error_btn_text: Option<&str>) -> Option<T> {
+        self.egui_poll_mut(ui, error_btn_text);
+        self.poll_take()
     }
 
     /// Checks to see if the data is ready and if it is returns a new [`Self`]
