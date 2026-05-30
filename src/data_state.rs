@@ -269,6 +269,14 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     pub fn is_awaiting_response(&self) -> bool {
         matches!(self, Self::AwaitingResponse(..))
     }
+
+    /// Returns `true` if the data state is [`Failed`].
+    ///
+    /// [`Failed`]: DataState::Failed
+    #[must_use]
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(..))
+    }
 }
 
 impl<T, E: ErrorBounds> AsRef<Self> for DataState<T, E> {
