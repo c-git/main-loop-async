@@ -16,7 +16,7 @@
     feature = "native-tokio",
     feature = "egui"
 ))]
-use eg_mod::main;
+pub use eg_mod::main;
 
 #[cfg(all(
     not(target_arch = "wasm32"),
