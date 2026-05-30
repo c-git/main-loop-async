@@ -130,7 +130,7 @@ impl Helper {
                 let secs = *seconds_required_to_load;
                 let atomic_load_count = Arc::clone(atomic_load_count);
                 let can_make_progress = data_state.egui_start_task(ui, || {
-                    spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
+                    spawn_with_return(move || Self::load_data(secs, atomic_load_count))
                 });
                 assert!(
                     can_make_progress.is_able_to_make_progress(),
@@ -167,7 +167,7 @@ impl Helper {
         } else {
             let atomic_load_count = Arc::clone(atomic_load_count);
             let can_make_progress = data_state.egui_start_or_poll(ui, None, || {
-                spawn_with_return(move || Helper::load_data(secs, atomic_load_count))
+                spawn_with_return(move || Self::load_data(secs, atomic_load_count))
             });
             assert!(
                 can_make_progress.is_able_to_make_progress(),
@@ -203,7 +203,7 @@ impl Helper {
 
     async fn load_data(secs: u64, atomic_load_count: Arc<AtomicU8>) -> anyhow::Result<String> {
         atomic_load_count.fetch_add(1, Ordering::Relaxed);
-        if Helper::should_fail() {
+        if Self::should_fail() {
             anyhow::bail!("there was a random problem loading the data, try again");
         }
 
