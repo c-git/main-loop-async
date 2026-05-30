@@ -49,10 +49,7 @@ impl<T, E: ErrorBounds> From<oneshot::Receiver<Result<T, E>>> for Awaiting<T, E>
 
 /// Used to store a type that is not always available and we need to keep
 /// polling it to get it ready
-#[cfg_attr(
-    feature = "serde",
-    derive(serde::Serialize, serde::Deserialize, serde(default))
-)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Default)]
 pub enum DataState<T, E: ErrorBounds = anyhow::Error> {
     /// Represent no data present and not pending
