@@ -1814,6 +1814,7 @@ dependencies = [
  "getrandom 0.4.2",
  "js-sys",
  "rand",
+ "serde",
  "thiserror 2.0.18",
  "tokio",
  "tracing",

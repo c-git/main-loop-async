@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::ops::Range;
 
 /// Automatically retries with a delay on failure until attempts are exhausted
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug)]
 pub struct DataStateRetry<T, E: ErrorBounds = anyhow::Error> {
     /// Number of attempts that the retries get reset to

@@ -49,15 +49,24 @@ impl<T, E: ErrorBounds> From<oneshot::Receiver<Result<T, E>>> for Awaiting<T, E>
 
 /// Used to store a type that is not always available and we need to keep
 /// polling it to get it ready
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize, serde::Deserialize, serde(default))
+)]
 #[derive(Debug, Default)]
 pub enum DataState<T, E: ErrorBounds = anyhow::Error> {
     /// Represent no data present and not pending
     #[default]
     None,
+
+    #[cfg_attr(feature = "serde", serde(skip))]
     /// Represents data has been requested and awaiting it being available
     AwaitingResponse(Awaiting<T, E>), // TODO 4: Add support for a timeout on waiting
+
     /// Represents data that is available for use
     Present(T),
+
+    #[cfg_attr(feature = "serde", serde(skip))]
     /// Represents an error that Occurred
     Failed(DataStateError<E>),
 }
