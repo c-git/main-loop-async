@@ -1,7 +1,6 @@
 use tracing::warn;
 
 use crate::{Awaiting, DataState, ErrorBounds, data_state::CanMakeProgress};
-use std::fmt::Debug;
 use std::ops::Range;
 
 /// Automatically retries with a delay on failure until attempts are exhausted

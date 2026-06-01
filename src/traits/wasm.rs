@@ -1,7 +1,6 @@
-use std::fmt::Debug;
 /// dox
-pub trait Spawnable: 'static + std::future::Future<Output: 'static + Debug> {}
-impl<T: 'static + std::future::Future<Output: 'static + Debug>> Spawnable for T {}
+pub trait Spawnable: 'static + std::future::Future<Output: 'static> {}
+impl<T: 'static + std::future::Future<Output: 'static>> Spawnable for T {}
 
 /// dox
 pub trait SpawnableWithReturn<Out: Spawnable>: 'static + FnOnce() -> Out {}

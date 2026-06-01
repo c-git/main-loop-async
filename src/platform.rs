@@ -46,8 +46,9 @@ pub fn spawn_with_return<F: SpawnableWithReturn<Out>, Out: Spawnable>(
     spawn(async move {
         let result = f().await;
         let result = tx.send(result);
-        if let Err(err_msg) = result {
-            tracing::error!("failed to send result from `spawn_with_return`: {err_msg:?}");
+        if let Err(_err_msg) = result {
+            // Abandoned showing the err_msg as the Debug bound too restrictive in practice
+            tracing::error!("failed to send result from `spawn_with_return` receiver dropped");
         }
     });
     rx

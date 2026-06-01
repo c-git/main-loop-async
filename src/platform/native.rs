@@ -42,14 +42,17 @@ pub fn spawn_thread_with_return<F, T>(f: F) -> futures::channel::oneshot::Receiv
 where
     F: FnOnce() -> T,
     F: Send + 'static,
-    T: Send + 'static + std::fmt::Debug,
+    T: Send + 'static,
 {
     let (tx, rx) = futures::channel::oneshot::channel();
     std::thread::spawn(move || {
         let task_result = f();
         let result = tx.send(task_result);
-        if let Err(err_msg) = result {
-            tracing::error!("failed to send result from `spawn_thread_with_return`: {err_msg:?}");
+        if let Err(_err_msg) = result {
+            // Abandoned showing the err_msg as the Debug bound too restrictive in practice
+            tracing::error!(
+                "failed to send result from `spawn_thread_with_return` receiver dropped"
+            );
         }
     });
     rx
