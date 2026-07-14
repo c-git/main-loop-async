@@ -54,7 +54,7 @@ mod eg_mod {
             "egui Example",
             eframe::NativeOptions::default(),
             move |ui, _frame| {
-                egui::CentralPanel::default().show_inside(ui, |ui| {
+                egui::CentralPanel::default().show(ui, |ui| {
                     ui.heading("egui Example");
                     ui.horizontal(|ui| {
                         let name_label = ui.label("Your name: ");
