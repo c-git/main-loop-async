@@ -58,6 +58,7 @@ mod data_state;
 mod data_state_retry;
 mod platform;
 mod traits;
+#[cfg(feature = "egui")]
 pub use egui;
 #[cfg(feature = "yield_now")]
 mod yield_;
