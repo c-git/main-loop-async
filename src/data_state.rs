@@ -326,3 +326,14 @@ impl CanMakeProgress {
         matches!(self, Self::UnableToMakeProgress)
     }
 }
+
+impl<E: ErrorBounds> DataStateError<E> {
+    /// Provides an easy way to get the debug version of the inner type without
+    /// the outer wrapper
+    pub fn inner_debug_string(&self) -> String {
+        match self {
+            Self::SenderDropped(_) => format!("{self}"),
+            Self::ErrorResponse(err_msg) | Self::FromE(err_msg) => format!("{err_msg:?}"),
+        }
+    }
+}
