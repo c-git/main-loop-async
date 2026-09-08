@@ -49,7 +49,8 @@ where
         let task_result = f();
         let result = tx.send(task_result);
         if let Err(_err_msg) = result {
-            // Abandoned showing the err_msg as the Debug bound too restrictive in practice
+            // Abandoned showing the err_msg as the Debug bound too restrictive
+            // in practice
             tracing::error!(
                 "failed to send result from `spawn_thread_with_return` receiver dropped"
             );

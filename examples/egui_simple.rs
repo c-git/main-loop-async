@@ -42,9 +42,9 @@ mod eg_mod {
         let mut name = "Arthur".to_owned();
         let mut age = 42;
         let mut data_state = DataState::None;
-        // This is more intended for use with things that load automatically, if you do
-        // not intend to use it this way you will need a separate variable to track if
-        // it should be attempting to load
+        // This is more intended for use with things that load automatically, if
+        // you do not intend to use it this way you will need a separate
+        // variable to track if it should be attempting to load
         let mut data_state_retry = DataStateRetry::new(3, 5000..10_000);
         let mut seconds_required_to_load = 5;
         let atomic_load_count = Arc::new(AtomicU8::new(0));
@@ -67,7 +67,8 @@ mod eg_mod {
                     }
                     ui.label(format!("Hello '{name}', age {age}"));
 
-                    // Data from the spawned task will show here after the user clicks
+                    // Data from the spawned task will show here after the user
+                    // clicks
                     Helper::controls_separation(ui);
                     Examples::example_load_keep(
                         ui,
@@ -76,8 +77,8 @@ mod eg_mod {
                         &atomic_load_count,
                     );
 
-                    // Alternate version to show data with automatic retry and automatically starts
-                    // trying to load
+                    // Alternate version to show data with automatic retry and
+                    // automatically starts trying to load
                     Helper::controls_separation(ui);
                     Examples::example_retry(
                         ui,
@@ -86,7 +87,8 @@ mod eg_mod {
                         &atomic_load_count,
                     );
 
-                    // Note this version has the poll where we can set the other variable
+                    // Note this version has the poll where we can set the other
+                    // variable
                     Helper::controls_separation(ui);
                     Examples::example_load_and_take(
                         ui,
@@ -144,8 +146,8 @@ mod eg_mod {
                     );
                 }
             } else if data_state.is_awaiting_response() {
-                // Currently loading allowing the user to abort, might not make sense for your
-                // application
+                // Currently loading allowing the user to abort, might not make
+                // sense for your application
                 if ui.button("Cancel Loading").clicked() {
                     *data_state = DataState::None;
                 }
@@ -187,8 +189,8 @@ mod eg_mod {
                 );
             }
             if data_state.is_awaiting_response() {
-                // Currently loading allowing the user to abort, might not make sense for your
-                // application
+                // Currently loading allowing the user to abort, might not make
+                // sense for your application
                 if ui.button("Cancel Loading").clicked() {
                     data_state.clear();
                 }
@@ -234,8 +236,8 @@ mod eg_mod {
                     ui.label("NB: See name for output of load");
                 });
             } else if data_state.is_awaiting_response() {
-                // Currently loading allowing the user to abort, might not make sense for your
-                // application
+                // Currently loading allowing the user to abort, might not make
+                // sense for your application
                 if ui.button("Cancel Loading").clicked() {
                     *data_state = DataState::None;
                 }

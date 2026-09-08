@@ -131,7 +131,8 @@ impl<T, E: ErrorBounds> DataState<T, E> {
     pub fn poll_take(&mut self) -> Option<T> {
         self.poll();
         if self.is_present() {
-            // This is safe and there is no race condition because we have mutable access
+            // This is safe and there is no race condition because we have
+            // mutable access
             let mut result = Self::None;
             std::mem::swap(self, &mut result);
             let non_present_state = match result {

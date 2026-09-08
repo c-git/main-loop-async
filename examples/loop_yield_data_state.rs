@@ -35,8 +35,8 @@ async fn common_code() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Starting loop");
 
-    // This loop would normally be a game loop, or the executor of an immediate mode
-    // GUI.
+    // This loop would normally be a game loop, or the executor of an immediate
+    // mode GUI.
     loop {
         if state.is_none() {
             let can_make_progress = state.start_task(|| spawn_with_return(|| doubled(10)));
